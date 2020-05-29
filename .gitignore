@@ -1,0 +1,8 @@
+.*/
+bin/
+
+*.iml
+
+go.sum
+
+__debug_bin
