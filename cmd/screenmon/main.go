@@ -46,7 +46,13 @@ func main() {
 	}(cancel)
 
 	displayIndex := *display - 1
-	screenTracker := screen.NewTracker(displayIndex).WithAlert(screen.AlerterFunc(alert.Play))
+	scrAreaSelector := screen.NewAreaSelector(displayIndex)
+
+	fmt.Println("Select the area of the screen to track.")
+	selArea := scrAreaSelector.Select()
+	fmt.Printf("The area of the screen to track: (%d,%d)-(%d,%d)\n", selArea.X1, selArea.Y1, selArea.X2, selArea.Y2)
+
+	screenTracker := screen.NewTracker(displayIndex, selArea).WithAlert(screen.AlerterFunc(alert.Play))
 	if err := screenTracker.TrackChanges(ctx, *timeout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)

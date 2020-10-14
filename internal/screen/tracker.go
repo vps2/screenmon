@@ -15,19 +15,21 @@ const threshold = 1
 
 //Tracker предназначен для отслеживания изменений на экране.
 type Tracker struct {
-	display        int
-	captureDisplay func(int) (*image.RGBA, error)
-	alerter        AlerterFunc
+	display     int
+	captureArea Area
+	capture     func(int, Area) (*image.RGBA, error)
+	alerter     AlerterFunc
 }
 
 //NewTracker возвращает новый Tracker для экрана с номером display.
 //Нумерация должна начинаться с 0 для первого активного экрана и по возрастающей: 1,2,3 ...
 //Если будет передан номер экрана, которого не существует в системе, то при попытке
 //вызвать метод Tracker.TrackChanges() он возвратит ошибку.
-func NewTracker(display int) *Tracker {
+func NewTracker(dispNumber int, captureArea Area) *Tracker {
 	return &Tracker{
-		display:        display,
-		captureDisplay: capture,
+		display:     dispNumber,
+		captureArea: captureArea,
+		capture:     capture,
 		alerter: func() error {
 			fmt.Printf("%s the screen has changed.\n", time.Now().Format("2006/02/01 15:04:05"))
 
@@ -49,7 +51,7 @@ func (t *Tracker) WithAlert(alerter AlerterFunc) *Tracker {
 func (t Tracker) TrackChanges(ctx context.Context, timeout time.Duration) error {
 	ticker := time.NewTicker(timeout)
 
-	img1, err := t.captureDisplay(t.display)
+	img1, err := t.capture(t.display, t.captureArea)
 	if err != nil {
 		return err
 	}
@@ -58,7 +60,7 @@ loop:
 	for {
 		select {
 		case <-ticker.C:
-			img2, err := t.captureDisplay(t.display)
+			img2, err := t.capture(t.display, t.captureArea)
 			if err != nil {
 				return err
 			}
@@ -80,7 +82,14 @@ loop:
 
 func compareImages(img1, img2 image.Image) int {
 	width := 80
-	height := img1.Bounds().Dy() / (img1.Bounds().Dx() / width)
+	height := 80
+
+	if img1.Bounds().Dx() <= width {
+		width = img1.Bounds().Dx()
+	}
+	if img1.Bounds().Dy() <= height {
+		height = img1.Bounds().Dy()
+	}
 
 	img1Hash, _ := goimagehash.ExtDifferenceHash(img1, width, height)
 	img2Hash, _ := goimagehash.ExtDifferenceHash(img2, width, height)

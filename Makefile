@@ -12,7 +12,15 @@ endif
 
 ## clean: удалить содержимое папки bin
 clean:
-	rm -f bin/*
+ifeq ($(GOOS),windows)
+	powershell "Get-ChildItem bin/* -Recurse | Remove-Item -Recurse"
+else
+	rm -rf bin/*
+endif
 
 help: Makefile
+ifeq ($(GOOS),windows)
+	@powershell '(Get-Content $< -Encoding utf8) -match "^##" -replace "^##(.*?):\s(.*?)"," `$$1   `$$2"'
+else
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
+endif
