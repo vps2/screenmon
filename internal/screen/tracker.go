@@ -11,7 +11,7 @@ import (
 )
 
 //Порог выше которого будет считаться, что изображение изменилось
-const threshold = 1
+const threshold = 0
 
 //Tracker предназначен для отслеживания изменений на экране.
 type Tracker struct {
