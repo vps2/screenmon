@@ -1,6 +1,16 @@
-.PHONY: build clean help
+.PHONY: run test build clean help
 
 GOOS = $(shell go env GOOS)
+DISPLAY=1
+TIMEOUT=5s
+
+## run: запустить программу. Можно установить значения переменных DISPLAY и/или TIMEOUT. 
+run:
+	go run cmd/screenmon/main.go -d=$(DISPLAY) -t=$(TIMEOUT)
+
+## test: запустить тесты
+test:
+	go test ./...
 
 ## build: создать исполняемый файл
 build:
@@ -20,7 +30,7 @@ endif
 
 help: Makefile
 ifeq ($(GOOS),windows)
-	@powershell '(Get-Content $< -Encoding utf8) -match "^##" -replace "^##(.*?):\s(.*?)"," `$$1   `$$2"'
+	@powershell '(Get-Content $< -Encoding utf8) -match "^##" -replace "^##(.*?):\s(.*?)"," `$$1`t`$$2"'
 else
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 endif
