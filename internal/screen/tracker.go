@@ -48,7 +48,7 @@ func (t *Tracker) WithAlert(alerter AlerterFunc) *Tracker {
 //TrackChanges отслеживает в цикле изменения на экране с интервалом, заданным в timeout.
 //Если на экране произошли какие-то изменения, то происходит оповещение.
 //ctx используется для того, чтобы завершить отслеживание изменений.
-func (t Tracker) TrackChanges(ctx context.Context, timeout time.Duration) error {
+func (t *Tracker) TrackChanges(ctx context.Context, timeout time.Duration) error {
 	ticker := time.NewTicker(timeout)
 
 	img1, err := t.capture(t.display, t.captureArea)
