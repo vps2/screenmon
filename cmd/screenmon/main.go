@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -31,20 +30,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func(cancel func()) {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			input := scanner.Text()
-			if input == "q" || input == "quit" || input == "exit" {
-				cancel()
-				break
-			}
-		}
-
-	}(cancel)
-
 	displayIndex := *display - 1
 	scrAreaSelector := screen.NewAreaSelector(displayIndex)
 
@@ -53,7 +38,27 @@ func main() {
 	fmt.Printf("The area of the screen to track: (%d,%d)-(%d,%d)\n", selArea.X1, selArea.Y1, selArea.X2, selArea.Y2)
 
 	screenTracker := screen.NewTracker(displayIndex, selArea).WithAlert(screen.AlerterFunc(alert.Play))
-	if err := screenTracker.TrackChanges(ctx, *timeout); err != nil {
+	screenTrackerMgr := screen.NewTrackerManager(screenTracker, *timeout)
+	screenTrackerMgr.Start()
+
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			input := scanner.Text()
+			if input == "q" || input == "quit" {
+				screenTrackerMgr.Stop()
+				break
+			} else if input == "s" || input == "start" {
+				screenTrackerMgr.Start()
+
+			} else if input == "p" || input == "pause" {
+				screenTrackerMgr.Pause()
+			}
+		}
+	}()
+
+	<-screenTrackerMgr.Done()
+	if err := screenTrackerMgr.Error(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
