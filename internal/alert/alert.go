@@ -2,7 +2,8 @@ package alert
 
 import (
 	"bytes"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"time"
 
 	"github.com/faiface/beep"
@@ -12,29 +13,58 @@ import (
 
 //go:generate go-bindata -pkg $GOPACKAGE -o assets.go -prefix "../../assets" ../../assets/
 
-//Play проигрывает сэмпл
-func Play() error {
+type readSeekNopCloser struct {
+	io.ReadSeeker
+}
+
+func (readSeekNopCloser) Close() error { return nil }
+
+type Player struct {
+	stream beep.StreamSeekCloser
+}
+
+func NewPlayer() *Player {
+	const errTmpl = "failed to create the player: %w"
+
 	data, err := Asset("alert.mp3")
 	if err != nil {
-		return err
+		panic(fmt.Errorf(errTmpl, err))
 	}
-	mp3Reader := ioutil.NopCloser(bytes.NewReader(data))
 
-	streamer, format, err := mp3.Decode(mp3Reader)
+	sampleReader := readSeekNopCloser{bytes.NewReader(data)}
+	stream, format, err := mp3.Decode(sampleReader)
 	if err != nil {
+		panic(fmt.Errorf(errTmpl, err))
+	}
+
+	if err := speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/5)); err != nil {
+		panic(fmt.Errorf(errTmpl, err))
+	}
+
+	player := Player{
+		stream: stream,
+	}
+
+	return &player
+}
+
+func (p *Player) Play() error {
+	if err := p.stream.Seek(0); err != nil {
 		return err
 	}
-	defer streamer.Close()
-
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/5))
-	defer speaker.Close()
 
 	done := make(chan bool)
-	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+
+	speaker.Play(p.stream, beep.Callback(func() {
 		done <- true
-	})))
+	}))
 
 	<-done
 
 	return nil
+}
+
+func (p *Player) Close() {
+	defer p.stream.Close()
+	defer speaker.Close()
 }

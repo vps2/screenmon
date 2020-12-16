@@ -30,6 +30,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	//Паникует, если не удалось создать. Поэтому создаю его до выбора области экрана.
+	alertPlayer := alert.NewPlayer()
+	defer alertPlayer.Close()
+
 	displayIndex := *display - 1
 	scrAreaSelector := screen.NewAreaSelector(displayIndex)
 
@@ -37,7 +41,7 @@ func main() {
 	selArea := scrAreaSelector.Select()
 	fmt.Printf("The area of the screen to track: (%d,%d)-(%d,%d)\n", selArea.X1, selArea.Y1, selArea.X2, selArea.Y2)
 
-	screenTracker := screen.NewTracker(displayIndex, selArea).WithAlert(screen.AlerterFunc(alert.Play))
+	screenTracker := screen.NewTracker(displayIndex, selArea).WithAlert(screen.AlerterFunc(alertPlayer.Play))
 	screenTrackerMgr := screen.NewTrackerManager(screenTracker, *timeout)
 	screenTrackerMgr.Start()
 
