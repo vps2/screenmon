@@ -50,6 +50,7 @@ func (t *Tracker) WithAlert(alerter AlerterFunc) *Tracker {
 //ctx используется для того, чтобы завершить отслеживание изменений.
 func (t *Tracker) TrackChanges(ctx context.Context, timeout time.Duration) error {
 	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
 
 	img1, err := t.capture(t.display, t.captureArea)
 	if err != nil {
