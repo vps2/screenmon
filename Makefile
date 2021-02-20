@@ -1,8 +1,8 @@
 .PHONY: run test build clean help
 
 GOOS = $(shell go env GOOS)
-DISPLAY=1
-TIMEOUT=5s
+DISPLAY?=1
+TIMEOUT?=5s
 
 ## run: запустить программу. Можно установить значения переменных DISPLAY и/или TIMEOUT. 
 run:
