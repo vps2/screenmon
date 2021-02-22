@@ -1,12 +1,12 @@
 .PHONY: run test build clean help
 
 GOOS = $(shell go env GOOS)
-DISPLAY?=1
+DISPLAY_INDEX?=1
 TIMEOUT?=5s
 
 ## run: запустить программу. Можно установить значения переменных DISPLAY и/или TIMEOUT. 
 run:
-	go run cmd/screenmon/main.go -d=$(DISPLAY) -t=$(TIMEOUT)
+	go run cmd/screenmon/main.go -d=$(DISPLAY_INDEX) -t=$(TIMEOUT)
 
 ## test: запустить тесты
 test:
